@@ -1,0 +1,42 @@
+{
+    "name": "fivelab/transactional",
+    "description": "Adds transactional layers to you application",
+    "keywords": [ "transactional", "orm transactional" ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Vitaliy Zhuk",
+            "email": "v.zhuk@fivelab.org"
+        },
+
+        {
+            "name": "FiveLab Team",
+            "email": "dev@fivelab.org",
+            "homepage": "http://fivelab.org"
+        }
+    ],
+
+    "require": {
+        "php": ">=5.4"
+    },
+
+    "require-dev": {
+        "doctrine/orm": "~2.4",
+        "doctrine/annotations": "1.*",
+        "phpunit/phpunit": "4.*"
+    },
+
+    "suggest": {
+        "doctrine/orm": "For use DoctrineORM transactional layer.",
+        "doctrine/annotations": "For read @Transactional annotation and auto generate proxy files"
+    },
+
+    "autoload": {
+        "psr-4": { "FiveLab\\Component\\Transactional\\": "src/" }
+    },
+
+    "config": {
+        "bin-dir": "./bin/"
+    }
+}
