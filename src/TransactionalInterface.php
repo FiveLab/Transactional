@@ -45,6 +45,8 @@ interface TransactionalInterface
      *
      * @param callable $callback
      * @param string   $key
+     *
+     * @return mixed
      */
     public function execute($callback, $key = null);
 }

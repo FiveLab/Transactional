@@ -11,26 +11,26 @@
 
 namespace FiveLab\Component\Transactional;
 
-use Doctrine\ORM\EntityManagerInterface;
-
 /**
- * Doctrine ORM Transactional layer
+ * AMQP Transactional
  *
  * @author Vitaliy Zhuk <v.zhuk@fivelab.org>
  */
-class DoctrineORMTransactional extends AbstractTransactional
+class AmqpTransactional extends AbstractTransactional
 {
     /**
-     * @var EntityManagerInterface
+     * @var \AMQPChannel
      */
-    private $entityManager;
+    private $channel;
 
     /**
-     * @param EntityManagerInterface $entityManager
+     * Construct
+     *
+     * @param \AMQPChannel $channel
      */
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(\AMQPChannel $channel)
     {
-        $this->entityManager = $entityManager;
+        $this->channel = $channel;
     }
 
     /**
@@ -38,7 +38,7 @@ class DoctrineORMTransactional extends AbstractTransactional
      */
     public function begin($key = null, array $options = [])
     {
-        $this->entityManager->beginTransaction();
+        $this->channel->startTransaction();
     }
 
     /**
@@ -46,8 +46,7 @@ class DoctrineORMTransactional extends AbstractTransactional
      */
     public function commit($key = null)
     {
-        $this->entityManager->flush();
-        $this->entityManager->commit();
+        $this->channel->commitTransaction();
     }
 
     /**
@@ -55,6 +54,6 @@ class DoctrineORMTransactional extends AbstractTransactional
      */
     public function rollback($key = null)
     {
-        $this->entityManager->rollback();
+        $this->channel->rollbackTransaction();
     }
 }

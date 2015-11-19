@@ -12,23 +12,27 @@
 namespace FiveLab\Component\Transactional;
 
 /**
- * Doctrine ORM Transactional tests
+ * AMQP Transactional tests
  *
  * @author Vitaliy Zhuk <v.zhuk@fivelab.org>
  */
-class DoctrineORMTransactionalTest extends \PHPUnit_Framework_TestCase
+class AmqpTransactionalTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * @var \Doctrine\ORM\EntityManagerInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var \AMQPChannel|\PHPUnit_Framework_MockObject_MockObject
      */
-    private $em;
+    private $channel;
 
     /**
      * {@inheritDoc}
      */
     public function setUp()
     {
-        $this->em = $this->getMockForAbstractClass('Doctrine\ORM\EntityManagerInterface');
+        if (!class_exists('AMQPChannel')) {
+            $this->markTestSkipped('The AMQP not installed.');
+        }
+
+        $this->channel = $this->getMock('AMQPChannel', [], [], '', false);
     }
 
     /**
@@ -36,9 +40,9 @@ class DoctrineORMTransactionalTest extends \PHPUnit_Framework_TestCase
      */
     public function testBeginTransaction()
     {
-        $this->em->expects($this->once())->method('beginTransaction');
+        $this->channel->expects($this->once())->method('startTransaction');
 
-        $transactional = new DoctrineORMTransactional($this->em);
+        $transactional = new AmqpTransactional($this->channel);
         $transactional->begin();
     }
 
@@ -47,10 +51,9 @@ class DoctrineORMTransactionalTest extends \PHPUnit_Framework_TestCase
      */
     public function testCommitTransaction()
     {
-        $this->em->expects($this->at(0))->method('flush');
-        $this->em->expects($this->at(1))->method('commit');
+        $this->channel->expects($this->once())->method('commitTransaction');
 
-        $transactional = new DoctrineORMTransactional($this->em);
+        $transactional = new AmqpTransactional($this->channel);
         $transactional->commit();
     }
 
@@ -59,9 +62,9 @@ class DoctrineORMTransactionalTest extends \PHPUnit_Framework_TestCase
      */
     public function testRollbackTransaction()
     {
-        $this->em->expects($this->once())->method('rollback');
+        $this->channel->expects($this->once())->method('rollbackTransaction');
 
-        $transactional = new DoctrineORMTransactional($this->em);
+        $transactional = new AmqpTransactional($this->channel);
         $transactional->rollback();
     }
 
@@ -70,11 +73,10 @@ class DoctrineORMTransactionalTest extends \PHPUnit_Framework_TestCase
      */
     public function testExecuteSuccessfully()
     {
-        $this->em->expects($this->at(0))->method('beginTransaction');
-        $this->em->expects($this->at(1))->method('flush');
-        $this->em->expects($this->at(2))->method('commit');
+        $this->channel->expects($this->at(0))->method('startTransaction');
+        $this->channel->expects($this->at(1))->method('commitTransaction');
 
-        $transactional = new DoctrineORMTransactional($this->em);
+        $transactional = new AmqpTransactional($this->channel);
         $result = $transactional->execute(function () {
             return 'some value';
         });
@@ -90,10 +92,10 @@ class DoctrineORMTransactionalTest extends \PHPUnit_Framework_TestCase
      */
     public function testExecuteFail()
     {
-        $this->em->expects($this->at(0))->method('beginTransaction');
-        $this->em->expects($this->at(1))->method('rollback');
+        $this->channel->expects($this->at(0))->method('startTransaction');
+        $this->channel->expects($this->at(1))->method('rollbackTransaction');
 
-        $transactional = new DoctrineORMTransactional($this->em);
+        $transactional = new AmqpTransactional($this->channel);
         $transactional->execute(function () {
             throw new \InvalidArgumentException('Some exception');
         });
