@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /*
  * This file is part of the FiveLab Transactional package
  *
@@ -24,6 +26,11 @@ class AmqpTransactional extends AbstractTransactional
     private $channel;
 
     /**
+     * @var int
+     */
+    private $nestingLevel = 0;
+
+    /**
      * Construct
      *
      * @param \AMQPChannel $channel
@@ -36,24 +43,42 @@ class AmqpTransactional extends AbstractTransactional
     /**
      * {@inheritDoc}
      */
-    public function begin($key = null, array $options = [])
+    public function begin($key = null, array $options = []): void
     {
-        $this->channel->startTransaction();
+        if (0 === $this->nestingLevel) {
+            $this->channel->startTransaction();
+        }
+
+        $this->nestingLevel++;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function commit($key = null)
+    public function commit($key = null): void
     {
-        $this->channel->commitTransaction();
+        if (0 === $this->nestingLevel) {
+            throw new \RuntimeException('No active transaction.');
+        }
+
+        $this->nestingLevel--;
+
+        if (0 === $this->nestingLevel) {
+            $this->channel->commitTransaction();
+        }
     }
 
     /**
      * {@inheritDoc}
      */
-    public function rollback($key = null)
+    public function rollback($key = null): void
     {
+        if (0 === $this->nestingLevel) {
+            throw new \RuntimeException('No active transaction.');
+        }
+
+        $this->nestingLevel--;
+
         $this->channel->rollbackTransaction();
     }
 }

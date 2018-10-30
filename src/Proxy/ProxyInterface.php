@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /*
  * This file is part of the FiveLab Transactional package.
  *
@@ -25,12 +27,12 @@ interface ProxyInterface
      *
      * @param TransactionalInterface $transactional
      */
-    public function ___setTransactional(TransactionalInterface $transactional);
+    public function ___setTransactional(TransactionalInterface $transactional): void;
 
     /**
      * Get real class name
      *
      * @return string
      */
-    public function ___getRealClassName();
+    public function ___getRealClassName(): string;
 }

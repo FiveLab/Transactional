@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /*
  * This file is part of the FiveLab Transactional package.
  *
@@ -52,7 +54,7 @@ class ChainTransactional extends AbstractTransactional
     /**
      * {@inheritDoc}
      */
-    public function begin($key = null, array $options = [])
+    public function begin($key = null, array $options = []): void
     {
         foreach ($this->layers as $transactional) {
             $transactional->begin($key, $options);
@@ -62,7 +64,7 @@ class ChainTransactional extends AbstractTransactional
     /**
      * {@inheritDoc}
      */
-    public function commit($key = null)
+    public function commit($key = null): void
     {
         foreach ($this->layers as $transactional) {
             $transactional->commit($key);
@@ -72,7 +74,7 @@ class ChainTransactional extends AbstractTransactional
     /**
      * {@inheritDoc}
      */
-    public function rollback($key = null)
+    public function rollback($key = null): void
     {
         foreach ($this->layers as $transactional) {
             $transactional->rollback($key);

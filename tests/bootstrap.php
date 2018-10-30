@@ -1,11 +1,7 @@
 <?php
 
-$vendorDir = __DIR__ . '/../../..';
+use Doctrine\Common\Annotations\AnnotationRegistry;
 
-if (file_exists($file = $vendorDir . '/autoload.php')) {
-    require_once $file;
-} else if (file_exists($file = './vendor/autoload.php')) {
-    require_once $file;
-} else {
-    throw new \RuntimeException("Not found composer autoload");
-}
+require_once __DIR__.'/../vendor/autoload.php';
+
+AnnotationRegistry::registerLoader('class_exists');

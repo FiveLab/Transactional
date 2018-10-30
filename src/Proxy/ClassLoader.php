@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /*
  * This file is part of the FiveLab Transactional package.
  *
@@ -28,7 +30,7 @@ class ClassLoader
      *
      * @param string $directory
      */
-    public function __construct($directory)
+    public function __construct(string $directory)
     {
         $this->directory = $directory;
     }
@@ -38,17 +40,17 @@ class ClassLoader
      *
      * @param bool $prepend
      */
-    public function register($prepend)
+    public function register(bool $prepend)
     {
-        spl_autoload_register([$this, 'loadClass'], true, $prepend);
+        \spl_autoload_register([$this, 'loadClass'], true, $prepend);
     }
 
     /**
      * Unregister loader
      */
-    public function unregister()
+    public function unregister(): void
     {
-        spl_autoload_unregister([$this, 'loadClass']);
+        \spl_autoload_unregister([$this, 'loadClass']);
     }
 
     /**
@@ -58,7 +60,7 @@ class ClassLoader
      *
      * @return bool|null
      */
-    public function loadClass($class)
+    public function loadClass(string $class)
     {
         if (strpos($class, 'Proxy\__Transactional__\\') !== 0) {
             return null;
@@ -80,7 +82,7 @@ class ClassLoader
      *
      * @return string The file path
      */
-    protected function findProxyFile($class)
+    protected function findProxyFile(string $class): ?string
     {
         $class = substr($class, 24);
 

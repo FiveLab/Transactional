@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /*
  * This file is part of the FiveLab Transactional package.
  *
@@ -39,7 +41,7 @@ class ProxyFileGenerator
      * @param string $directory
      * @param string $class
      */
-    public function __construct($directory, $class)
+    public function __construct(string $directory, string $class)
     {
         $this->reflectionClass = new \ReflectionClass($class);
         $this->codeGenerator = new ProxyCodeGenerator($this->reflectionClass);
@@ -51,30 +53,32 @@ class ProxyFileGenerator
      *
      * @return bool
      */
-    public function needGenerate()
+    public function needGenerate(): bool
     {
         return $this->codeGenerator->needGenerate();
     }
 
     /**
      * Generate proxy file
+     *
+     * @return string
      */
-    public function generate()
+    public function generate(): string
     {
         $namespace = $this->reflectionClass->getNamespaceName();
-        $fileDirectory = rtrim($this->directory, '/') . '/Proxy/' . str_replace('\\', '/', $namespace);
+        $fileDirectory = \rtrim($this->directory, '/') . '/Proxy/' . \str_replace('\\', '/', $namespace);
         $fileName = $this->reflectionClass->getShortName() . 'Proxy.php';
         $filePath = $fileDirectory . '/' . $fileName;
 
-        if (!is_dir($fileDirectory)) {
+        if (!\is_dir($fileDirectory)) {
             // Try create directory
-            if (false === @mkdir($fileDirectory, 0777, true)) {
+            if (false === @\mkdir($fileDirectory, 0777, true)) {
                 throw new \RuntimeException(sprintf(
                     'Could not create directory "%s" for proxy file. Maybe not rights?',
                     $fileDirectory
                 ));
             }
-        } else if (!is_writable($fileDirectory)) {
+        } else if (!\is_writable($fileDirectory)) {
             throw new \RuntimeException(sprintf(
                 'Cannot write to "%s" directory for save proxy file.',
                 $fileDirectory
@@ -82,14 +86,14 @@ class ProxyFileGenerator
         }
 
         // Create file
-        if (false === @touch($filePath)) {
+        if (false === @\touch($filePath)) {
             throw new \RuntimeException(sprintf(
                 'Could not create file "%s" for proxy class. Maybe not rights?',
                 $filePath
             ));
         }
 
-        file_put_contents($filePath, $this->codeGenerator->generate());
+        \file_put_contents($filePath, $this->codeGenerator->generate());
 
         return $filePath;
     }
@@ -99,7 +103,7 @@ class ProxyFileGenerator
      *
      * @return string
      */
-    public function getProxyClassName()
+    public function getProxyClassName(): string
     {
         return $this->codeGenerator->getProxyClassName();
     }

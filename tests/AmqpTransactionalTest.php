@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /*
  * This file is part of the FiveLab Transactional package.
  *
@@ -9,14 +11,17 @@
  * file that was distributed with this source code.
  */
 
-namespace FiveLab\Component\Transactional;
+namespace FiveLab\Component\Transactional\Tests;
+
+use FiveLab\Component\Transactional\AmqpTransactional;
+use PHPUnit\Framework\TestCase;
 
 /**
  * AMQP Transactional tests
  *
  * @author Vitaliy Zhuk <v.zhuk@fivelab.org>
  */
-class AmqpTransactionalTest extends \PHPUnit_Framework_TestCase
+class AmqpTransactionalTest extends TestCase
 {
     /**
      * @var \AMQPChannel|\PHPUnit_Framework_MockObject_MockObject
@@ -26,44 +31,69 @@ class AmqpTransactionalTest extends \PHPUnit_Framework_TestCase
     /**
      * {@inheritDoc}
      */
-    public function setUp()
+    public function setUp(): void
     {
-        if (!class_exists('AMQPChannel')) {
+        parent::setUp();
+
+        if (!\class_exists(\AMQPChannel::class)) {
             $this->markTestSkipped('The AMQP not installed.');
         }
 
-        $this->channel = $this->getMock('AMQPChannel', [], [], '', false);
+        $this->channel = $this->createMock(\AMQPChannel::class);
     }
 
     /**
      * Test begin transaction
      */
-    public function testBeginTransaction()
+    public function testBeginAndCommitTransaction(): void
     {
-        $this->channel->expects($this->once())->method('startTransaction');
+        $this->channel->expects(self::once())
+            ->method('startTransaction');
+
+        $this->channel->expects(self::once())
+            ->method('commitTransaction');
 
         $transactional = new AmqpTransactional($this->channel);
         $transactional->begin();
-    }
-
-    /**
-     * Test commit transaction
-     */
-    public function testCommitTransaction()
-    {
-        $this->channel->expects($this->once())->method('commitTransaction');
-
-        $transactional = new AmqpTransactional($this->channel);
         $transactional->commit();
     }
 
     /**
      * Test rollback
      */
-    public function testRollbackTransaction()
+    public function testBeginAndRollbackTransaction(): void
     {
-        $this->channel->expects($this->once())->method('rollbackTransaction');
+        $this->channel->expects(self::once())
+            ->method('startTransaction');
 
+        $this->channel->expects(self::once())
+            ->method('rollbackTransaction');
+
+        $transactional = new AmqpTransactional($this->channel);
+        $transactional->begin();
+        $transactional->rollback();
+    }
+
+    /**
+     * Test exception on commit without active transaction.
+     *
+     * @expectedException \RuntimeException
+     * @expectedExceptionMessage No active transaction.
+     */
+    public function testExceptionOnCommitWithoutActiveTransaction(): void
+    {
+        $transactional = new AmqpTransactional($this->channel);
+        $transactional->commit();
+    }
+
+    /**
+     * Test exception on rollback without active transaction.
+     *
+     * @expectedException \RuntimeException
+     * @expectedExceptionMessage No active transaction.
+     */
+    public function testExceptionOnRollbackWithoutActiveTransaction(): void
+    {
         $transactional = new AmqpTransactional($this->channel);
         $transactional->rollback();
     }
@@ -71,17 +101,41 @@ class AmqpTransactionalTest extends \PHPUnit_Framework_TestCase
     /**
      * Test successfully execute
      */
-    public function testExecuteSuccessfully()
+    public function testExecuteSuccessfully(): void
     {
-        $this->channel->expects($this->at(0))->method('startTransaction');
-        $this->channel->expects($this->at(1))->method('commitTransaction');
+        $this->channel->expects(self::at(0))
+            ->method('startTransaction');
+
+        $this->channel->expects(self::at(1))
+            ->method('commitTransaction');
 
         $transactional = new AmqpTransactional($this->channel);
         $result = $transactional->execute(function () {
             return 'some value';
         });
 
-        $this->assertEquals('some value', $result);
+        self::assertEquals('some value', $result);
+    }
+
+    public function testExecuteSuccessfullyWithHierarchicallyCall(): void
+    {
+        $this->channel->expects(self::once())
+            ->method('startTransaction');
+
+        $this->channel->expects(self::once())
+            ->method('commitTransaction');
+
+        $transactional = new AmqpTransactional($this->channel);
+
+        $result = $transactional->execute(function () use ($transactional) {
+            return $transactional->execute(function () use ($transactional) {
+                return $transactional->execute(function () {
+                    return 'foo bar';
+                });
+            });
+        });
+
+        self::assertEquals('foo bar', $result);
     }
 
     /**
@@ -90,10 +144,13 @@ class AmqpTransactionalTest extends \PHPUnit_Framework_TestCase
      * @expectedException \InvalidArgumentException
      * @expectedExceptionMessage Some exception
      */
-    public function testExecuteFail()
+    public function testExecuteFail(): void
     {
-        $this->channel->expects($this->at(0))->method('startTransaction');
-        $this->channel->expects($this->at(1))->method('rollbackTransaction');
+        $this->channel->expects(self::at(0))
+            ->method('startTransaction');
+
+        $this->channel->expects(self::at(1))
+            ->method('rollbackTransaction');
 
         $transactional = new AmqpTransactional($this->channel);
         $transactional->execute(function () {

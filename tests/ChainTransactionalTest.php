@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /*
  * This file is part of the FiveLab Transactional package.
  *
@@ -9,14 +11,18 @@
  * file that was distributed with this source code.
  */
 
-namespace FiveLab\Component\Transactional;
+namespace FiveLab\Component\Transactional\Tests;
+
+use FiveLab\Component\Transactional\ChainTransactional;
+use FiveLab\Component\Transactional\TransactionalInterface;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Chain transactional testing
  *
  * @author Vitaliy Zhuk <v.zhuk@fivelab.org>
  */
-class ChainTransactionalTest extends \PHPUnit_Framework_TestCase
+class ChainTransactionalTest extends TestCase
 {
     /**
      * @var TransactionalInterface|\PHPUnit_Framework_MockObject_MockObject
@@ -33,8 +39,8 @@ class ChainTransactionalTest extends \PHPUnit_Framework_TestCase
      */
     public function setUp()
     {
-        $this->first = $this->getMockForAbstractClass('FiveLab\Component\Transactional\TransactionalInterface');
-        $this->second = $this->getMockForAbstractClass('FiveLab\Component\Transactional\TransactionalInterface');
+        $this->first = $this->createMock(TransactionalInterface::class);
+        $this->second = $this->createMock(TransactionalInterface::class);
     }
 
     /**
@@ -45,9 +51,10 @@ class ChainTransactionalTest extends \PHPUnit_Framework_TestCase
         $key = 'some-key';
         $options = ['opt1', 'opt2'];
 
-        $this->first->expects($this->once())->method('begin')
+        $this->first->expects(self::once())->method('begin')
             ->with($key, $options);
-        $this->second->expects($this->once())->method('begin')
+
+        $this->second->expects(self::once())->method('begin')
             ->with($key, $options);
 
         $transactional = new ChainTransactional([
@@ -63,9 +70,10 @@ class ChainTransactionalTest extends \PHPUnit_Framework_TestCase
      */
     public function testCommitTransaction()
     {
-        $this->first->expects($this->once())->method('commit')
+        $this->first->expects(self::once())->method('commit')
             ->with('some-key');
-        $this->second->expects($this->once())->method('commit')
+
+        $this->second->expects(self::once())->method('commit')
             ->with('some-key');
 
         $transactional = new ChainTransactional([
@@ -81,9 +89,10 @@ class ChainTransactionalTest extends \PHPUnit_Framework_TestCase
      */
     public function testRollbackTransaction()
     {
-        $this->first->expects($this->once())->method('rollback')
+        $this->first->expects(self::once())->method('rollback')
             ->with('some-key');
-        $this->second->expects($this->once())->method('rollback')
+
+        $this->second->expects(self::once())->method('rollback')
             ->with('some-key');
 
         $transactional = new ChainTransactional([
@@ -99,14 +108,16 @@ class ChainTransactionalTest extends \PHPUnit_Framework_TestCase
      */
     public function testExecuteSuccessfully()
     {
-        $this->first->expects($this->at(0))->method('begin')
-            ->with('some-key');
-        $this->first->expects($this->at(1))->method('commit')
+        $this->first->expects(self::at(0))->method('begin')
             ->with('some-key');
 
-        $this->second->expects($this->at(0))->method('begin')
+        $this->first->expects(self::at(1))->method('commit')
             ->with('some-key');
-        $this->second->expects($this->at(1))->method('commit')
+
+        $this->second->expects(self::at(0))->method('begin')
+            ->with('some-key');
+
+        $this->second->expects(self::at(1))->method('commit')
             ->with('some-key');
 
         $transactional = new ChainTransactional([
@@ -118,7 +129,7 @@ class ChainTransactionalTest extends \PHPUnit_Framework_TestCase
             return 'some value';
         }, 'some-key');
 
-        $this->assertEquals('some value', $result);
+        self::assertEquals('some value', $result);
     }
 
     /**
@@ -129,14 +140,16 @@ class ChainTransactionalTest extends \PHPUnit_Framework_TestCase
      */
     public function testExecuteFail()
     {
-        $this->first->expects($this->at(0))->method('begin')
-            ->with('some-key');
-        $this->first->expects($this->at(1))->method('rollback')
+        $this->first->expects(self::at(0))->method('begin')
             ->with('some-key');
 
-        $this->second->expects($this->at(0))->method('begin')
+        $this->first->expects(self::at(1))->method('rollback')
             ->with('some-key');
-        $this->second->expects($this->at(1))->method('rollback')
+
+        $this->second->expects(self::at(0))->method('begin')
+            ->with('some-key');
+
+        $this->second->expects(self::at(1))->method('rollback')
             ->with('some-key');
 
         $transactional = new ChainTransactional([

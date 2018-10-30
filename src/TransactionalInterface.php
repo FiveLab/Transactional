@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /*
  * This file is part of the FiveLab Transactional package.
  *
@@ -24,21 +26,21 @@ interface TransactionalInterface
      * @param string $key
      * @param array  $options
      */
-    public function begin($key = null, array $options = []);
+    public function begin($key = null, array $options = []): void;
 
     /**
      * Commit transaction
      *
      * @param string $key
      */
-    public function commit($key = null);
+    public function commit($key = null): void;
 
     /**
      * Rollback
      *
      * @param string $key
      */
-    public function rollback($key = null);
+    public function rollback($key = null): void;
 
     /**
      * Execute callback in transactional

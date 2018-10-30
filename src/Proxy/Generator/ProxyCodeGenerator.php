@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /*
  * This file is part of the FiveLab Transactional package.
  *
@@ -13,6 +15,7 @@ namespace FiveLab\Component\Transactional\Proxy\Generator;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\Reader;
+use FiveLab\Component\Transactional\Annotation\Transactional;
 
 /**
  * Generate proxy classes for transactional layer
@@ -63,9 +66,9 @@ class ProxyCodeGenerator
      *
      * @return bool
      */
-    public function needGenerate()
+    public function needGenerate(): bool
     {
-        return count($this->getProxyMethods()) > 0;
+        return \count($this->getProxyMethods()) > 0;
     }
 
     /**
@@ -73,7 +76,7 @@ class ProxyCodeGenerator
      *
      * @return string
      */
-    public function generate()
+    public function generate(): string
     {
         return $this->generateProxyClass();
     }
@@ -83,9 +86,9 @@ class ProxyCodeGenerator
      *
      * @return string
      */
-    public function getProxyClassName()
+    public function getProxyClassName(): string
     {
-        return 'Proxy\__Transactional__\\' . $this->reflectionClass->getName() . 'Proxy';
+        return 'Proxy\__Transactional__\\'.$this->reflectionClass->getName().'Proxy';
     }
 
     /**
@@ -93,7 +96,7 @@ class ProxyCodeGenerator
      *
      * @return array|\ReflectionMethod[]
      */
-    private function getProxyMethods()
+    private function getProxyMethods(): array
     {
         if (null !== $this->reflectionProxyMethods) {
             return $this->reflectionProxyMethods;
@@ -105,10 +108,10 @@ class ProxyCodeGenerator
         foreach ($methods as $method) {
             $docComment = $method->getDocComment();
 
-            if (strpos($docComment, 'Transactional') !== false) {
+            if (\strpos($docComment, 'Transactional') !== false) {
                 $annotation = $this->annotationReader->getMethodAnnotation(
                     $method,
-                    'FiveLab\Component\Transactional\Annotation\Transactional'
+                    Transactional::class
                 );
 
                 if ($annotation) {
@@ -127,7 +130,7 @@ class ProxyCodeGenerator
      *
      * @return \ReflectionMethod[]
      */
-    private function getClassMethods()
+    private function getClassMethods(): array
     {
         if (null !== $this->reflectionMethods) {
             return $this->reflectionMethods;
@@ -138,7 +141,7 @@ class ProxyCodeGenerator
         $class = $this->reflectionClass;
 
         do {
-            $this->reflectionMethods = array_merge(
+            $this->reflectionMethods = \array_merge(
                 $this->reflectionMethods,
                 $class->getMethods()
             );
@@ -154,16 +157,16 @@ class ProxyCodeGenerator
      *
      * @return array
      */
-    private function getAllUseStatementsMarkedAsAnnotation(\ReflectionClass $class)
+    private function getAllUseStatementsMarkedAsAnnotation(\ReflectionClass $class): array
     {
-        $tokens = token_get_all(file_get_contents($class->getFileName()));
+        $tokens = \token_get_all(\file_get_contents($class->getFileName()));
 
         $uses = [];
         $buffer = '';
         $startUseParse = false;
 
         foreach ($tokens as $token) {
-            if (is_scalar($token)) {
+            if (\is_scalar($token)) {
                 // Single element
                 if ($token == ';' || $token = ',') {
                     if ($startUseParse) {
@@ -185,7 +188,7 @@ class ProxyCodeGenerator
             $type = $token[0];
             $value = $token[1];
 
-            if (in_array($type, [T_ABSTRACT, T_CLASS, T_INTERFACE, T_TRAIT])) {
+            if (\in_array($type, [T_ABSTRACT, T_CLASS, T_INTERFACE, T_TRAIT])) {
                 // Start class or interface or trait
                 break;
             }
@@ -205,15 +208,15 @@ class ProxyCodeGenerator
                 return false;
             }
 
-            $parts = explode(' as ', $class, 2);
+            $parts = \explode(' as ', $class, 2);
             $class = $parts[0];
 
             try {
                 $reflection = new \ReflectionClass($class);
             } catch (\ReflectionException $e) {
                 if ($searchChild) {
-                    foreach (get_declared_classes() as $declaredClass) {
-                        if (strpos($declaredClass, $class) === 0) {
+                    foreach (\get_declared_classes() as $declaredClass) {
+                        if (\strpos($declaredClass, $class) === 0) {
                             if (true === $useFiltering($declaredClass, false)) {
                                 return true;
                             }
@@ -224,14 +227,14 @@ class ProxyCodeGenerator
                 return false;
             }
 
-            if ($reflection->getName() == 'FiveLab\Component\Transactional\Annotation\Transactional') {
+            if ($reflection->getName() == Transactional::class) {
                 return false;
             }
 
-            return strpos($reflection->getDocComment(), '@Annotation') !== false;
+            return \strpos($reflection->getDocComment(), '@Annotation') !== false;
         };
 
-        $uses = array_filter($uses, $useFiltering);
+        $uses = \array_filter($uses, $useFiltering);
 
         return $uses;
     }
@@ -241,7 +244,7 @@ class ProxyCodeGenerator
      *
      * @return string
      */
-    private function generateProxyClass()
+    private function generateProxyClass(): string
     {
         $class = $this->reflectionClass;
 
@@ -264,12 +267,12 @@ class ProxyCodeGenerator
         $uses = $this->getAllUseStatementsMarkedAsAnnotation($class);
         $uses[] = 'FiveLab\Component\Transactional\Proxy\ProxyInterface as FiveLabTransactionalProxyInterface';
 
-        $uses = array_map(function ($use) {
-            return 'use ' . $use . ';';
+        $uses = \array_map(function ($use) {
+            return 'use '.$use.';';
         }, $uses);
 
         $interfaces = [
-            'FiveLabTransactionalProxyInterface'
+            'FiveLabTransactionalProxyInterface',
         ];
 
         foreach ($this->getProxyMethods() as $method) {
@@ -277,23 +280,25 @@ class ProxyCodeGenerator
         }
 
         $docComment = $class->getDocComment();
-        $docComment = $this->formatDocComment($docComment);
 
         $templateVariables = [
-            'uses' => implode("\n", $uses),
-            'namespace' => $class->getNamespaceName(),
-            'docComment' => $docComment,
-            'proxyClassName' => $class->getShortName() . 'Proxy',
-            'className' => '\\' . $class->getName(),
-            'proxyMethods' => implode("\n\n", $methodCodes),
-            'interfaces' => implode(', ', $interfaces),
-            'realClassName' => $class->getName()
+            'uses'           => \implode("\n", $uses),
+            'namespace'      => $class->getNamespaceName(),
+            'docComment'     => $docComment,
+            'proxyClassName' => $class->getShortName().'Proxy',
+            'className'      => '\\'.$class->getName(),
+            'proxyMethods'   => \implode("\n\n", $methodCodes),
+            'interfaces'     => \implode(', ', $interfaces),
+            'realClassName'  => $class->getName(),
         ];
 
         $template = $this->getTemplateForProxyClass();
         $code = $this->replaceVariables($template, $templateVariables);
 
-        return $code;
+        $lines = \explode("\n", $code);
+        $lines = \array_map('rtrim', $lines);
+
+        return \implode("\n", $lines);
     }
 
     /**
@@ -303,7 +308,7 @@ class ProxyCodeGenerator
      *
      * @return string
      */
-    private function generateProxyMethod(\ReflectionMethod $method)
+    private function generateProxyMethod(\ReflectionMethod $method): string
     {
         if ($method->isConstructor()) {
             throw new \RuntimeException(sprintf(
@@ -332,20 +337,27 @@ class ProxyCodeGenerator
         $methodParameters = [];
 
         foreach ($method->getParameters() as $methodParameter) {
-            $methodParameters[] = '$' . $methodParameter->getName();
+            $methodParameters[] = '$'.$methodParameter->getName();
 
             if ($methodParameter->getClass()) {
                 $proxyMethodParameter = sprintf(
                     '\\%s %s',
                     $methodParameter->getClass()->getName(),
-                    '$' . $methodParameter->getName()
+                    '$'.$methodParameter->getName()
+                );
+            } else if ($methodParameter->getType()) {
+                $proxyMethodParameter = \sprintf(
+                    '%s%s $%s',
+                    $methodParameter->getType()->allowsNull() ? '?' : '',
+                    $methodParameter->getType()->getName(),
+                    $methodParameter->getName()
                 );
             } else {
-                $proxyMethodParameter = '$' . $methodParameter->getName();
+                $proxyMethodParameter = '$'.$methodParameter->getName();
             }
 
             if ($methodParameter->isOptional()) {
-                $proxyMethodParameter .= ' = ' . var_export($methodParameter->getDefaultValue(), true);
+                $proxyMethodParameter .= ' = '.\var_export($methodParameter->getDefaultValue(), true);
             }
 
             $proxyMethodParameters[] = $proxyMethodParameter;
@@ -353,7 +365,7 @@ class ProxyCodeGenerator
 
         if ($method->isPublic()) {
             $availability = 'public';
-        } elseif ($method->isProtected()) {
+        } else if ($method->isProtected()) {
             $availability = 'protected';
         } else {
             throw new \RuntimeException(sprintf(
@@ -363,18 +375,34 @@ class ProxyCodeGenerator
             ));
         }
 
-        $docComment = $method->getDocComment();
-        $docComment = $this->formatDocComment($docComment);
+        $docComment = "/**\n * {@inheritdoc}\n */";
+        $returnTypeHint = '';
+        $returnResult = "\n\n    return \$result;";
+
+        if ($method->getReturnType()) {
+            $returnTypeHint = sprintf(
+                ': %s%s%s',
+                \class_exists($method->getReturnType()->getName()) ? '\\' : '',
+                $method->getReturnType()->allowsNull() ? '?' : '',
+                $method->getReturnType()->getName()
+            );
+        }
+
+        if ($method->getReturnType() && 'void' === $method->getReturnType()->getName()) {
+            $returnResult = '';
+        }
 
         $templateVariables = [
-            'docComment' => $docComment,
-            'availability' => $availability,
-            'name' => $method->getName(),
-            'proxyMethodParameters' => implode(', ', $proxyMethodParameters),
-            'parameters' => implode(', ', $methodParameters),
-            'beginArguments' => null,
-            'rollbackArguments' => null,
-            'commitArguments' => null
+            'docComment'            => $docComment,
+            'availability'          => $availability,
+            'name'                  => $method->getName(),
+            'proxyMethodParameters' => \implode(', ', $proxyMethodParameters),
+            'parameters'            => \implode(', ', $methodParameters),
+            'beginArguments'        => null,
+            'rollbackArguments'     => null,
+            'commitArguments'       => null,
+            'return_type_hint'      => $returnTypeHint,
+            'return_result'         => $returnResult,
         ];
 
         $methodTemplate = $this->getTemplateForProxyMethod();
@@ -389,7 +417,7 @@ class ProxyCodeGenerator
      *
      * @return string
      */
-    private function getTemplateForProxyClass()
+    private function getTemplateForProxyClass(): string
     {
         return <<<PHP
 <?php
@@ -422,7 +450,7 @@ class %proxyClassName% extends %className% implements %interfaces%
      *
      * @param \FiveLab\Component\Transactional\TransactionalInterface \$transactional
      */
-    public function ___setTransactional(\FiveLab\Component\Transactional\TransactionalInterface \$transactional)
+    public function ___setTransactional(\FiveLab\Component\Transactional\TransactionalInterface \$transactional): void
     {
         \$this->___transactional = \$transactional;
     }
@@ -432,7 +460,7 @@ class %proxyClassName% extends %className% implements %interfaces%
      *
      * @return string
      */
-    public function ___getRealClassName()
+    public function ___getRealClassName(): string
     {
         return \$this->___realClassName;
     }
@@ -449,11 +477,11 @@ PHP;
      *
      * @return string
      */
-    private function getTemplateForProxyMethod()
+    private function getTemplateForProxyMethod(): string
     {
         return <<<PHP
 %docComment%
-%availability% function %name%(%proxyMethodParameters%)
+%availability% function %name%(%proxyMethodParameters%)%return_type_hint%
 {
     // Begin transaction
     \$this->___transactional->begin(%beginArguments%);
@@ -468,9 +496,7 @@ PHP;
     }
 
     // Commit transaction
-    \$this->___transactional->commit(%commitArguments%);
-
-    return \$result;
+    \$this->___transactional->commit(%commitArguments%);%return_result%
 }
 PHP;
 
@@ -484,12 +510,12 @@ PHP;
      *
      * @return string
      */
-    private function replaceVariables($template, array $variables)
+    private function replaceVariables($template, array $variables): string
     {
         foreach ($variables as $key => $value) {
-            $key = '%' . $key . '%';
+            $key = '%'.$key.'%';
 
-            $template = str_replace($key, $value, $template);
+            $template = \str_replace($key, $value, $template);
         }
 
         return $template;
@@ -503,58 +529,14 @@ PHP;
      *
      * @return string
      */
-    private function appendTabulationCharacter($text, $count)
+    private function appendTabulationCharacter($text, $count): string
     {
-        $lines = explode("\n", $text);
+        $lines = \explode("\n", $text);
 
         foreach ($lines as $index => $line) {
-            $lines[$index] = str_repeat("    ", $count) . rtrim($line);
+            $lines[$index] = \str_repeat("    ", $count).rtrim($line);
         }
 
-        return implode(PHP_EOL, $lines);
-    }
-
-    /**
-     * Format doc comment
-     *
-     * @param string $docBlock
-     *
-     * @return string
-     */
-    private function formatDocComment($docBlock)
-    {
-        $lines = explode("\n", $docBlock);
-        $newLines = [];
-
-        foreach ($lines as $line) {
-            $line = str_replace(['/**', '*/'], ['', ''], $line);
-            $line = trim($line);
-
-            if (!$line) {
-                continue;
-            }
-
-            if ($line[0] == '*') {
-                $line = substr($line, 1);
-            }
-
-            if ($line == '{@inheritDoc}' || $line == '{@inheritdoc}') {
-                continue;
-            }
-
-            if (ltrim($line) == '@Transactional' || ltrim($line) == '@Transactional()') {
-                continue;
-            }
-
-            $newLines[] = $line;
-        }
-
-        if (count($newLines)) {
-            $docBlock = "/**\n *" . implode("\n *", $newLines) . "\n */";
-        } else {
-            $docBlock = "/**\n * {@inheritDoc}\n */";
-        }
-
-        return $docBlock;
+        return \implode(PHP_EOL, $lines);
     }
 }

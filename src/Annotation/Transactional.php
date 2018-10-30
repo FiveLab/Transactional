@@ -14,7 +14,7 @@ namespace FiveLab\Component\Transactional\Annotation;
 /**
  * Indicate for run method in transaction layer
  *
- * @Annotation
+ * @Annotation()
  * @Target({"METHOD"})
  *
  * @author Vitaliy Zhuk <v.zhuk@fivelab.org>

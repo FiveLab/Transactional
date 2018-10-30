@@ -23,7 +23,7 @@ abstract class AbstractTransactional implements TransactionalInterface
      */
     public function execute($callback, $key = null)
     {
-        if (!is_callable($callback)) {
+        if (!\is_callable($callback)) {
             throw new \InvalidArgumentException(sprintf(
                 'The callback must be a callable, but "%s" given.',
                 is_scalar($callback) ? $callback : gettype($callback)
@@ -33,7 +33,7 @@ abstract class AbstractTransactional implements TransactionalInterface
         $this->begin($key);
 
         try {
-            $result = call_user_func($callback);
+            $result = \call_user_func($callback);
             $this->commit($key);
 
         } catch (\Exception $e) {
