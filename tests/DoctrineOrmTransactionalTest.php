@@ -14,7 +14,8 @@ declare(strict_types = 1);
 namespace FiveLab\Component\Transactional\Tests;
 
 use Doctrine\ORM\EntityManagerInterface;
-use FiveLab\Component\Transactional\DoctrineORMTransactional;
+use FiveLab\Component\Transactional\DoctrineOrmTransactional;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -22,17 +23,17 @@ use PHPUnit\Framework\TestCase;
  *
  * @author Vitaliy Zhuk <v.zhuk@fivelab.org>
  */
-class DoctrineORMTransactionalTest extends TestCase
+class DoctrineOrmTransactionalTest extends TestCase
 {
     /**
-     * @var \Doctrine\ORM\EntityManagerInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var EntityManagerInterface|MockObject
      */
     private $em;
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
-    public function setUp()
+    protected function setUp(): void
     {
         $this->em = $this->createMock(EntityManagerInterface::class);
     }
@@ -40,19 +41,19 @@ class DoctrineORMTransactionalTest extends TestCase
     /**
      * Test begin transaction
      */
-    public function testBeginTransaction()
+    public function testBeginTransaction(): void
     {
         $this->em->expects(self::once())
             ->method('beginTransaction');
 
-        $transactional = new DoctrineORMTransactional($this->em);
+        $transactional = new DoctrineOrmTransactional($this->em);
         $transactional->begin();
     }
 
     /**
      * Test commit transaction
      */
-    public function testCommitTransaction()
+    public function testCommitTransaction(): void
     {
         $this->em->expects(self::at(0))
             ->method('flush');
@@ -60,26 +61,26 @@ class DoctrineORMTransactionalTest extends TestCase
         $this->em->expects(self::at(1))
             ->method('commit');
 
-        $transactional = new DoctrineORMTransactional($this->em);
+        $transactional = new DoctrineOrmTransactional($this->em);
         $transactional->commit();
     }
 
     /**
      * Test rollback
      */
-    public function testRollbackTransaction()
+    public function testRollbackTransaction(): void
     {
         $this->em->expects(self::once())
             ->method('rollback');
 
-        $transactional = new DoctrineORMTransactional($this->em);
+        $transactional = new DoctrineOrmTransactional($this->em);
         $transactional->rollback();
     }
 
     /**
      * Test successfully execute
      */
-    public function testExecuteSuccessfully()
+    public function testExecuteSuccessfully(): void
     {
         $this->em->expects(self::at(0))
             ->method('beginTransaction');
@@ -90,8 +91,8 @@ class DoctrineORMTransactionalTest extends TestCase
         $this->em->expects(self::at(2))
             ->method('commit');
 
-        $transactional = new DoctrineORMTransactional($this->em);
-        $result = $transactional->execute(function () {
+        $transactional = new DoctrineOrmTransactional($this->em);
+        $result = $transactional->execute(static function () {
             return 'some value';
         });
 
@@ -100,20 +101,20 @@ class DoctrineORMTransactionalTest extends TestCase
 
     /**
      * Test fail execute
-     *
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage Some exception
      */
-    public function testExecuteFail()
+    public function testExecuteFail(): void
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Some exception');
+
         $this->em->expects(self::at(0))
             ->method('beginTransaction');
 
         $this->em->expects(self::at(1))
             ->method('rollback');
 
-        $transactional = new DoctrineORMTransactional($this->em);
-        $transactional->execute(function () {
+        $transactional = new DoctrineOrmTransactional($this->em);
+        $transactional->execute(static function () {
             throw new \InvalidArgumentException('Some exception');
         });
     }

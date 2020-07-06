@@ -22,33 +22,27 @@ interface TransactionalInterface
 {
     /**
      * Begin transaction
-     *
-     * @param string $key
-     * @param array  $options
      */
-    public function begin($key = null, array $options = []): void;
+    public function begin(): void;
 
     /**
      * Commit transaction
-     *
-     * @param string $key
      */
-    public function commit($key = null): void;
+    public function commit(): void;
 
     /**
      * Rollback
      *
      * @param string $key
      */
-    public function rollback($key = null): void;
+    public function rollback(): void;
 
     /**
      * Execute callback in transactional
      *
-     * @param callable $callback
-     * @param string   $key
+     * @param \Closure $callback
      *
      * @return mixed
      */
-    public function execute($callback, $key = null);
+    public function execute(\Closure $callback);
 }

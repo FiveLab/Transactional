@@ -31,7 +31,7 @@ class AmqpTransactionalTest extends TestCase
     /**
      * {@inheritDoc}
      */
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -76,24 +76,24 @@ class AmqpTransactionalTest extends TestCase
 
     /**
      * Test exception on commit without active transaction.
-     *
-     * @expectedException \RuntimeException
-     * @expectedExceptionMessage No active transaction.
      */
     public function testExceptionOnCommitWithoutActiveTransaction(): void
     {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('No active transaction.');
+
         $transactional = new AmqpTransactional($this->channel);
         $transactional->commit();
     }
 
     /**
      * Test exception on rollback without active transaction.
-     *
-     * @expectedException \RuntimeException
-     * @expectedExceptionMessage No active transaction.
      */
     public function testExceptionOnRollbackWithoutActiveTransaction(): void
     {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('No active transaction.');
+
         $transactional = new AmqpTransactional($this->channel);
         $transactional->rollback();
     }
@@ -110,7 +110,7 @@ class AmqpTransactionalTest extends TestCase
             ->method('commitTransaction');
 
         $transactional = new AmqpTransactional($this->channel);
-        $result = $transactional->execute(function () {
+        $result = $transactional->execute(static function () {
             return 'some value';
         });
 
@@ -127,8 +127,8 @@ class AmqpTransactionalTest extends TestCase
 
         $transactional = new AmqpTransactional($this->channel);
 
-        $result = $transactional->execute(function () use ($transactional) {
-            return $transactional->execute(function () use ($transactional) {
+        $result = $transactional->execute(static function () use ($transactional) {
+            return $transactional->execute(static function () use ($transactional) {
                 return $transactional->execute(function () {
                     return 'foo bar';
                 });
@@ -140,12 +140,12 @@ class AmqpTransactionalTest extends TestCase
 
     /**
      * Test fail execute
-     *
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage Some exception
      */
     public function testExecuteFail(): void
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Some exception');
+
         $this->channel->expects(self::at(0))
             ->method('startTransaction');
 
@@ -153,7 +153,8 @@ class AmqpTransactionalTest extends TestCase
             ->method('rollbackTransaction');
 
         $transactional = new AmqpTransactional($this->channel);
-        $transactional->execute(function () {
+
+        $transactional->execute(static function () {
             throw new \InvalidArgumentException('Some exception');
         });
     }

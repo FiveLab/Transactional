@@ -41,43 +41,39 @@ class ChainTransactional extends AbstractTransactional
      * Add transactional layer
      *
      * @param TransactionalInterface $transactional
-     *
-     * @return ChainTransactional
      */
-    public function addTransactional(TransactionalInterface $transactional)
+    public function addTransactional(TransactionalInterface $transactional): void
     {
         $this->layers[spl_object_hash($transactional)] = $transactional;
-
-        return $this;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function begin($key = null, array $options = []): void
+    public function begin(): void
     {
         foreach ($this->layers as $transactional) {
-            $transactional->begin($key, $options);
+            $transactional->begin();
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    public function commit($key = null): void
+    public function commit(): void
     {
         foreach ($this->layers as $transactional) {
-            $transactional->commit($key);
+            $transactional->commit();
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    public function rollback($key = null): void
+    public function rollback(): void
     {
         foreach ($this->layers as $transactional) {
-            $transactional->rollback($key);
+            $transactional->rollback();
         }
     }
 }

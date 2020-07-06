@@ -19,9 +19,9 @@ namespace FiveLab\Component\Transactional;
 abstract class AbstractTransactional implements TransactionalInterface
 {
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
-    public function execute($callback, $key = null)
+    public function execute(\Closure $callback)
     {
         if (!\is_callable($callback)) {
             throw new \InvalidArgumentException(sprintf(
@@ -30,14 +30,14 @@ abstract class AbstractTransactional implements TransactionalInterface
             ));
         }
 
-        $this->begin($key);
+        $this->begin();
 
         try {
             $result = \call_user_func($callback);
-            $this->commit($key);
+            $this->commit();
 
         } catch (\Exception $e) {
-            $this->rollback($key);
+            $this->rollback();
 
             throw $e;
         }

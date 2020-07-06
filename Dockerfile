@@ -1,4 +1,4 @@
-FROM php:7.1
+FROM php:7.1-cli
 
 MAINTAINER Vitaliy Zhuk <v.zhuk@fivelab.org>
 
@@ -15,3 +15,5 @@ RUN \
 
 # Install composer
 RUN curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/local/bin/composer
+
+WORKDIR /code

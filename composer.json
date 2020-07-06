@@ -22,8 +22,9 @@
     },
 
     "require-dev": {
+        "ext-amqp": "*",
         "doctrine/orm": "~2.4",
-        "doctrine/annotations": "1.*",
+        "doctrine/annotations": "~1.0",
         "phpunit/phpunit": "~7.4.3"
     },
 
@@ -44,5 +45,12 @@
 
     "config": {
         "bin-dir": "./bin/"
+    },
+
+    "extra": {
+        "thanks": {
+            "name": "fivelab/amqp",
+            "url": "https://github.com/FiveLab/Amqp"
+        }
     }
 }

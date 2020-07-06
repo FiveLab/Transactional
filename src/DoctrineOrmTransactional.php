@@ -20,7 +20,7 @@ use Doctrine\ORM\EntityManagerInterface;
  *
  * @author Vitaliy Zhuk <v.zhuk@fivelab.org>
  */
-class DoctrineORMTransactional extends AbstractTransactional
+class DoctrineOrmTransactional extends AbstractTransactional
 {
     /**
      * @var EntityManagerInterface
@@ -38,7 +38,7 @@ class DoctrineORMTransactional extends AbstractTransactional
     /**
      * {@inheritDoc}
      */
-    public function begin($key = null, array $options = []): void
+    public function begin(): void
     {
         $this->entityManager->beginTransaction();
     }
@@ -46,7 +46,7 @@ class DoctrineORMTransactional extends AbstractTransactional
     /**
      * {@inheritDoc}
      */
-    public function commit($key = null): void
+    public function commit(): void
     {
         $this->entityManager->flush();
         $this->entityManager->commit();
@@ -55,7 +55,7 @@ class DoctrineORMTransactional extends AbstractTransactional
     /**
      * {@inheritDoc}
      */
-    public function rollback($key = null): void
+    public function rollback(): void
     {
         $this->entityManager->rollback();
     }

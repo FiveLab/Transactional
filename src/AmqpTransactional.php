@@ -43,7 +43,7 @@ class AmqpTransactional extends AbstractTransactional
     /**
      * {@inheritDoc}
      */
-    public function begin($key = null, array $options = []): void
+    public function begin(): void
     {
         if (0 === $this->nestingLevel) {
             $this->channel->startTransaction();
@@ -55,7 +55,7 @@ class AmqpTransactional extends AbstractTransactional
     /**
      * {@inheritDoc}
      */
-    public function commit($key = null): void
+    public function commit(): void
     {
         if (0 === $this->nestingLevel) {
             throw new \RuntimeException('No active transaction.');
@@ -71,7 +71,7 @@ class AmqpTransactional extends AbstractTransactional
     /**
      * {@inheritDoc}
      */
-    public function rollback($key = null): void
+    public function rollback(): void
     {
         if (0 === $this->nestingLevel) {
             throw new \RuntimeException('No active transaction.');
