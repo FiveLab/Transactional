@@ -14,6 +14,7 @@ declare(strict_types = 1);
 namespace FiveLab\Component\Transactional\Tests;
 
 use FiveLab\Component\Transactional\AmqpTransactional;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,28 +25,28 @@ use PHPUnit\Framework\TestCase;
 class AmqpTransactionalTest extends TestCase
 {
     /**
-     * @var \AMQPChannel|\PHPUnit_Framework_MockObject_MockObject
+     * @var \AMQPChannel|MockObject
      */
-    private $channel;
+    private \AMQPChannel $channel;
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     protected function setUp(): void
     {
         parent::setUp();
 
         if (!\class_exists(\AMQPChannel::class)) {
-            $this->markTestSkipped('The AMQP not installed.');
+            self::markTestSkipped('The AMQP not installed.');
         }
 
         $this->channel = $this->createMock(\AMQPChannel::class);
     }
 
     /**
-     * Test begin transaction
+     * @test
      */
-    public function testBeginAndCommitTransaction(): void
+    public function shouldBeginAndCommitTransaction(): void
     {
         $this->channel->expects(self::once())
             ->method('startTransaction');
@@ -59,9 +60,9 @@ class AmqpTransactionalTest extends TestCase
     }
 
     /**
-     * Test rollback
+     * @test
      */
-    public function testBeginAndRollbackTransaction(): void
+    public function shouldBeginAndRollbackTransaction(): void
     {
         $this->channel->expects(self::once())
             ->method('startTransaction');
@@ -75,9 +76,9 @@ class AmqpTransactionalTest extends TestCase
     }
 
     /**
-     * Test exception on commit without active transaction.
+     * @test
      */
-    public function testExceptionOnCommitWithoutActiveTransaction(): void
+    public function shouldExceptionOnCommitWithoutActiveTransaction(): void
     {
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('No active transaction.');
@@ -87,9 +88,9 @@ class AmqpTransactionalTest extends TestCase
     }
 
     /**
-     * Test exception on rollback without active transaction.
+     * @test
      */
-    public function testExceptionOnRollbackWithoutActiveTransaction(): void
+    public function shouldExceptionOnRollbackWithoutActiveTransaction(): void
     {
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('No active transaction.');
@@ -99,14 +100,14 @@ class AmqpTransactionalTest extends TestCase
     }
 
     /**
-     * Test successfully execute
+     * @test
      */
-    public function testExecuteSuccessfully(): void
+    public function shouldExecuteSuccessfully(): void
     {
-        $this->channel->expects(self::at(0))
+        $this->channel->expects(self::once())
             ->method('startTransaction');
 
-        $this->channel->expects(self::at(1))
+        $this->channel->expects(self::once())
             ->method('commitTransaction');
 
         $transactional = new AmqpTransactional($this->channel);
@@ -117,7 +118,10 @@ class AmqpTransactionalTest extends TestCase
         self::assertEquals('some value', $result);
     }
 
-    public function testExecuteSuccessfullyWithHierarchicallyCall(): void
+    /**
+     * @test
+     */
+    public function shouldExecuteSuccessfullyWithHierarchicallyCall(): void
     {
         $this->channel->expects(self::once())
             ->method('startTransaction');
@@ -139,17 +143,17 @@ class AmqpTransactionalTest extends TestCase
     }
 
     /**
-     * Test fail execute
+     * @test
      */
-    public function testExecuteFail(): void
+    public function shouldExecuteFail(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Some exception');
 
-        $this->channel->expects(self::at(0))
+        $this->channel->expects(self::once())
             ->method('startTransaction');
 
-        $this->channel->expects(self::at(1))
+        $this->channel->expects(self::once())
             ->method('rollbackTransaction');
 
         $transactional = new AmqpTransactional($this->channel);

@@ -1,7 +1,7 @@
 Transactional
 =============
 
-[![Build Status](https://travis-ci.org/FiveLab/Transactional.svg?branch=master)](https://travis-ci.org/FiveLab/Transactional)
+[![Build Status](https://github.com/FiveLab/Transactional/workflows/Testing/badge.svg?branch=master)](https://github.com/FiveLab/Transactional/actions)
 
 With use this package, you can run you code in transactional layer.
 

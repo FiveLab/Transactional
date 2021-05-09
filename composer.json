@@ -1,7 +1,7 @@
 {
     "name": "fivelab/transactional",
     "description": "Adds transactional layers to you application",
-    "keywords": [ "transactional", "orm transactional" ],
+    "keywords": [ "transactional", "orm transactional", "amqp transactional" ],
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -18,19 +18,19 @@
     ],
 
     "require": {
-        "php": ">=7.1"
+        "php": "~7.4 | ~8.0"
     },
 
     "require-dev": {
         "ext-amqp": "*",
         "doctrine/orm": "~2.4",
-        "doctrine/annotations": "~1.0",
-        "phpunit/phpunit": "~7.4.3"
+        "phpunit/phpunit": "~9.5.0",
+        "phpstan/phpstan": "~0.12.85",
+        "escapestudios/symfony2-coding-standard": "~3.5.0"
     },
 
     "suggest": {
-        "doctrine/orm": "For use DoctrineORM transactional layer.",
-        "doctrine/annotations": "For read @Transactional annotation and auto generate proxy files"
+        "doctrine/orm": "For use DoctrineORM transactional layer."
     },
 
     "autoload": {
@@ -49,8 +49,8 @@
 
     "extra": {
         "thanks": {
-            "name": "fivelab/amqp",
-            "url": "https://github.com/FiveLab/Amqp"
+            "name": "fivelab/transactional",
+            "url": "https://github.com/FiveLab/Transactional"
         }
     }
 }

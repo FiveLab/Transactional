@@ -15,6 +15,7 @@ namespace FiveLab\Component\Transactional\Tests;
 
 use FiveLab\Component\Transactional\ChainTransactional;
 use FiveLab\Component\Transactional\TransactionalInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -25,28 +26,28 @@ use PHPUnit\Framework\TestCase;
 class ChainTransactionalTest extends TestCase
 {
     /**
-     * @var TransactionalInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var TransactionalInterface|MockObject
      */
-    private $first;
+    private TransactionalInterface $first;
 
     /**
-     * @var TransactionalInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var TransactionalInterface|MockObject
      */
-    private $second;
+    private TransactionalInterface $second;
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->first = $this->createMock(TransactionalInterface::class);
         $this->second = $this->createMock(TransactionalInterface::class);
     }
 
     /**
-     * Test begin transaction
+     * @test
      */
-    public function testBeginTransaction(): void
+    public function shouldBeginTransaction(): void
     {
         $this->first->expects(self::once())->method('begin');
 
@@ -54,16 +55,16 @@ class ChainTransactionalTest extends TestCase
 
         $transactional = new ChainTransactional([
             $this->first,
-            $this->second
+            $this->second,
         ]);
 
         $transactional->begin();
     }
 
     /**
-     * Test commit transaction
+     * @test
      */
-    public function testCommitTransaction(): void
+    public function shouldCommitTransaction(): void
     {
         $this->first->expects(self::once())->method('commit');
 
@@ -71,16 +72,16 @@ class ChainTransactionalTest extends TestCase
 
         $transactional = new ChainTransactional([
             $this->first,
-            $this->second
+            $this->second,
         ]);
 
         $transactional->commit();
     }
 
     /**
-     * Test rollback transaction
+     * @test
      */
-    public function testRollbackTransaction(): void
+    public function shouldRollbackTransaction(): void
     {
         $this->first->expects(self::once())->method('rollback');
 
@@ -88,28 +89,26 @@ class ChainTransactionalTest extends TestCase
 
         $transactional = new ChainTransactional([
             $this->first,
-            $this->second
+            $this->second,
         ]);
 
         $transactional->rollback();
     }
 
     /**
-     * Test successfully execute
+     * @test
      */
-    public function testExecuteSuccessfully(): void
+    public function shouldExecuteSuccessfully(): void
     {
-        $this->first->expects(self::at(0))->method('begin');
+        $this->first->expects(self::once())->method('begin');
+        $this->first->expects(self::once())->method('commit');
 
-        $this->first->expects(self::at(1))->method('commit');
-
-        $this->second->expects(self::at(0))->method('begin');
-
-        $this->second->expects(self::at(1))->method('commit');
+        $this->second->expects(self::once())->method('begin');
+        $this->second->expects(self::once())->method('commit');
 
         $transactional = new ChainTransactional([
             $this->first,
-            $this->second
+            $this->second,
         ]);
 
         $result = $transactional->execute(static function () {
@@ -120,24 +119,22 @@ class ChainTransactionalTest extends TestCase
     }
 
     /**
-     * Test fail execute
+     * @test
      */
-    public function testExecuteFail(): void
+    public function shouldExecuteFail(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Some exception');
 
-        $this->first->expects(self::at(0))->method('begin');
+        $this->first->expects(self::once())->method('begin');
+        $this->first->expects(self::once())->method('rollback');
 
-        $this->first->expects(self::at(1))->method('rollback');
-
-        $this->second->expects(self::at(0))->method('begin');
-
-        $this->second->expects(self::at(1))->method('rollback');
+        $this->second->expects(self::once())->method('begin');
+        $this->second->expects(self::once())->method('rollback');
 
         $transactional = new ChainTransactional([
             $this->first,
-            $this->second
+            $this->second,
         ]);
 
         $transactional->execute(static function () {

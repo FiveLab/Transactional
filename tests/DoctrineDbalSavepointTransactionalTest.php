@@ -28,12 +28,12 @@ class DoctrineDbalSavepointTransactionalTest extends TestCase
     /**
      * @var Connection|MockObject
      */
-    private $connection;
+    private Connection $connection;
 
     /**
      * @var DoctrineDbalSavepointTransactional
      */
-    private $transactional;
+    private DoctrineDbalSavepointTransactional $transactional;
 
     /**
      * {@inheritdoc}
@@ -56,9 +56,9 @@ class DoctrineDbalSavepointTransactionalTest extends TestCase
     }
 
     /**
-     * Test begin transaction
+     * @test
      */
-    public function testBeginTransaction(): void
+    public function shouldBeginTransaction(): void
     {
         $this->connection->expects(self::once())
             ->method('exec')
@@ -68,66 +68,70 @@ class DoctrineDbalSavepointTransactionalTest extends TestCase
     }
 
     /**
-     * Test commit transaction
+     * @test
      */
-    public function testCommitTransaction(): void
+    public function shouldCommitTransaction(): void
     {
-        $this->connection->expects(self::at(1))
+        $this->connection->expects(self::exactly(2))
             ->method('exec')
-            ->with('RELEASE SAVEPOINT savepoint_0');
+            ->withConsecutive(
+                ['SAVEPOINT savepoint_0'],
+                ['RELEASE SAVEPOINT savepoint_0']
+            );
 
         $this->transactional->begin();
         $this->transactional->commit();
     }
 
     /**
-     * Test rollback
+     * @test
      */
-    public function testRollbackTransaction(): void
+    public function shouldRollbackTransaction(): void
     {
-        $this->connection->expects(self::at(1))
+        $this->connection->expects(self::exactly(2))
             ->method('exec')
-            ->with('ROLLBACK TO SAVEPOINT savepoint_0');
+            ->withConsecutive(
+                ['SAVEPOINT savepoint_0'],
+                ['ROLLBACK TO SAVEPOINT savepoint_0']
+            );
 
         $this->transactional->begin();
         $this->transactional->rollback();
     }
 
     /**
-     * Test successfully execute
+     * @test
      */
-    public function testExecuteSuccessfully(): void
+    public function shouldExecuteSuccessfully(): void
     {
-        $this->connection->expects(self::at(0))
+        $this->connection->expects(self::exactly(2))
             ->method('exec')
-            ->with('SAVEPOINT savepoint_0');
-
-        $this->connection->expects(self::at(1))
-            ->method('exec')
-            ->with('RELEASE SAVEPOINT savepoint_0');
+            ->withConsecutive(
+                ['SAVEPOINT savepoint_0'],
+                ['RELEASE SAVEPOINT savepoint_0']
+            );
 
         $result = $this->transactional->execute(static function () {
             return 'some value';
         });
 
-        $this->assertEquals('some value', $result);
+        self::assertEquals('some value', $result);
     }
 
     /**
-     * Test fail execute
+     * @test
      */
-    public function testExecuteFail(): void
+    public function shouldExecuteFail(): void
     {
+        $this->connection->expects(self::exactly(2))
+            ->method('exec')
+            ->withConsecutive(
+                ['SAVEPOINT savepoint_0'],
+                ['ROLLBACK TO SAVEPOINT savepoint_0']
+            );
+
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Some exception');
-
-        $this->connection->expects(self::at(0))
-            ->method('exec')
-            ->with('SAVEPOINT savepoint_0');
-
-        $this->connection->expects(self::at(1))
-            ->method('exec')
-            ->with('ROLLBACK TO SAVEPOINT savepoint_0');
 
         $this->transactional->execute(static function () {
             throw new \InvalidArgumentException('Some exception');

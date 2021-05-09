@@ -1,0 +1,82 @@
+name: Testing
+
+on:
+    push:
+    pull_request:
+
+jobs:
+    code-style:
+        name: Check code style
+        runs-on: ubuntu-latest
+
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v2
+
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    coverage: "none"
+                    extensions: "amqp"
+                    ini-values: "memory_limit=-1"
+                    php-version: "7.4"
+                    tools: "composer"
+
+            -   name: Install vendors
+                run: composer install --prefer-dist
+
+            -   name: Check style on sources
+                run: bin/phpcs --standard=vendor/escapestudios/symfony2-coding-standard/Symfony/ src/
+
+            -   name: Check style on tests
+                run: bin/phpcs --standard=vendor/escapestudios/symfony2-coding-standard/Symfony/ tests/
+
+    php-stan:
+        name: Run PHP-Stan
+        runs-on: ubuntu-latest
+
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v2
+
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    coverage: "none"
+                    extensions: "amqp"
+                    ini-values: "memory_limit=-1"
+                    php-version: "7.4"
+                    tools: "composer"
+
+            -   name: Install vendors
+                run: composer install --prefer-dist
+
+            -   name: Run php stan
+                run: bin/phpstan
+
+    tests:
+        name: Run tests
+        runs-on: ubuntu-latest
+
+        strategy:
+            matrix:
+                php: [ '7.4', '8.0' ]
+
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v2
+
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    coverage: "none"
+                    extensions: "amqp"
+                    ini-values: "memory_limit=-1"
+                    php-version: "${{ matrix.php }}"
+                    tools: "composer"
+
+            -   name: Install vendors (stable)
+                run: composer install --prefer-dist
+
+            -   name: Run tests
+                run: bin/phpunit

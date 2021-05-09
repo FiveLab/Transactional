@@ -32,8 +32,6 @@ interface TransactionalInterface
 
     /**
      * Rollback
-     *
-     * @param string $key
      */
     public function rollback(): void;
 

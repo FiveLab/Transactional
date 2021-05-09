@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /*
  * This file is part of the FiveLab Transactional package
  *
@@ -23,19 +25,11 @@ abstract class AbstractTransactional implements TransactionalInterface
      */
     public function execute(\Closure $callback)
     {
-        if (!\is_callable($callback)) {
-            throw new \InvalidArgumentException(sprintf(
-                'The callback must be a callable, but "%s" given.',
-                is_scalar($callback) ? $callback : gettype($callback)
-            ));
-        }
-
         $this->begin();
 
         try {
-            $result = \call_user_func($callback);
+            $result = $callback();
             $this->commit();
-
         } catch (\Exception $e) {
             $this->rollback();
 
