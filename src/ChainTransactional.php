@@ -62,8 +62,19 @@ class ChainTransactional extends AbstractTransactional
      */
     public function commit(): void
     {
-        foreach ($this->layers as $transactional) {
-            $transactional->commit();
+        $layers = $this->layers;
+        $mustRollback = false;
+
+        while ($layer = \array_shift($layers)) {
+            try {
+                if ($mustRollback) {
+                    $layer->rollback();
+                } else {
+                    $layer->commit();
+                }
+            } catch (\Throwable $error) {
+                $mustRollback = true;
+            }
         }
     }
 
@@ -73,7 +84,11 @@ class ChainTransactional extends AbstractTransactional
     public function rollback(): void
     {
         foreach ($this->layers as $transactional) {
-            $transactional->rollback();
+            try {
+                $transactional->rollback();
+            } catch (\Throwable $error) {
+                // nothing action, all next layers should rollback also
+            }
         }
     }
 }

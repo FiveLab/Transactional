@@ -29,12 +29,13 @@ abstract class AbstractTransactional implements TransactionalInterface
 
         try {
             $result = $callback();
-            $this->commit();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->rollback();
 
             throw $e;
         }
+
+        $this->commit();
 
         return $result;
     }

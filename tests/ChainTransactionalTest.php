@@ -141,4 +141,47 @@ class ChainTransactionalTest extends TestCase
             throw new \InvalidArgumentException('Some exception');
         });
     }
+
+    /**
+     * @test
+     */
+    public function shouldRollBackAllLayersIfCommitFails(): void
+    {
+        $this->first
+            ->expects(self::exactly(1))
+            ->method('commit')
+            ->willThrowException(new \RuntimeException('some exception'));
+
+        $this->first->expects(self::exactly(0))->method('rollback');
+
+        $this->second->expects(self::exactly(1))->method('rollback');
+        $this->second->expects(self::exactly(0))->method('commit');
+
+        $transactional = new ChainTransactional([
+            $this->first,
+            $this->second,
+        ]);
+
+        $transactional->commit();
+    }
+
+    /**
+     * @test
+     */
+    public function shouldRollbackAllLayersIfOneRollbackFails(): void
+    {
+        $this->first
+            ->expects(self::exactly(1))
+            ->method('rollback')
+            ->willThrowException(new \RuntimeException('some exception'));
+
+        $this->second->expects(self::exactly(1))->method('rollback');
+
+        $transactional = new ChainTransactional([
+            $this->first,
+            $this->second,
+        ]);
+
+        $transactional->rollback();
+    }
 }
