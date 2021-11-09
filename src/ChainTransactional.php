@@ -64,6 +64,7 @@ class ChainTransactional extends AbstractTransactional
     {
         $layers = $this->layers;
         $mustRollback = false;
+        $firstException = null;
 
         while ($layer = \array_shift($layers)) {
             try {
@@ -74,7 +75,12 @@ class ChainTransactional extends AbstractTransactional
                 }
             } catch (\Throwable $error) {
                 $mustRollback = true;
+                $firstException = $firstException ?: $error;
             }
+        }
+
+        if ($firstException) {
+            throw $firstException;
         }
     }
 
