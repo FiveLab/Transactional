@@ -162,6 +162,9 @@ class ChainTransactionalTest extends TestCase
             $this->second,
         ]);
 
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('some exception');
+
         $transactional->commit();
     }
 
