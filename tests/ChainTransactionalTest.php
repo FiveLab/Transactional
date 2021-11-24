@@ -147,15 +147,15 @@ class ChainTransactionalTest extends TestCase
      */
     public function shouldRollBackAllLayersIfCommitFails(): void
     {
-        $this->first
+        $this->second
             ->expects(self::exactly(1))
             ->method('commit')
             ->willThrowException(new \RuntimeException('some exception'));
 
-        $this->first->expects(self::exactly(0))->method('rollback');
+        $this->second->expects(self::exactly(0))->method('rollback');
 
-        $this->second->expects(self::exactly(1))->method('rollback');
-        $this->second->expects(self::exactly(0))->method('commit');
+        $this->first->expects(self::exactly(1))->method('rollback');
+        $this->first->expects(self::exactly(0))->method('commit');
 
         $transactional = new ChainTransactional([
             $this->first,

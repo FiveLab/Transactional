@@ -66,7 +66,7 @@ class ChainTransactional extends AbstractTransactional
         $mustRollback = false;
         $firstException = null;
 
-        while ($layer = \array_shift($layers)) {
+        while ($layer = \array_pop($layers)) {
             try {
                 if ($mustRollback) {
                     $layer->rollback();
