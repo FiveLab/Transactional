@@ -147,15 +147,16 @@ class ChainTransactionalTest extends TestCase
      */
     public function shouldRollBackAllLayersIfCommitFails(): void
     {
-        $this->first
+        $this->second
             ->expects(self::exactly(1))
             ->method('commit')
             ->willThrowException(new \RuntimeException('some exception'));
 
-        $this->first->expects(self::exactly(0))->method('rollback');
+        $this->second->expects(self::exactly(0))->method('rollback');
+        $this->second->expects(self::exactly(1))->method('commit');
 
-        $this->second->expects(self::exactly(1))->method('rollback');
-        $this->second->expects(self::exactly(0))->method('commit');
+        $this->first->expects(self::exactly(1))->method('rollback');
+        $this->first->expects(self::exactly(0))->method('commit');
 
         $transactional = new ChainTransactional([
             $this->first,
@@ -186,5 +187,59 @@ class ChainTransactionalTest extends TestCase
         ]);
 
         $transactional->rollback();
+    }
+
+    /**
+     * @test
+     */
+    public function shouldCommitInCorrectOrder(): void
+    {
+        $order = [];
+
+        $this->second->expects(self::once())->method('commit')
+            ->willReturnCallback(static function () use (&$order) {
+                $order[] = 'second';
+            });
+
+        $this->first->expects(self::once())->method('commit')
+            ->willReturnCallback(static function () use (&$order) {
+                $order[] = 'first';
+            });
+
+        $transactional = new ChainTransactional([
+            $this->first,
+            $this->second,
+        ]);
+
+        $transactional->commit();
+
+        self::assertEquals(['second', 'first'], $order);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldRollbackInCorrectOrder(): void
+    {
+        $order = [];
+
+        $this->second->expects(self::once())->method('rollback')
+            ->willReturnCallback(static function () use (&$order) {
+                $order[] = 'second';
+            });
+
+        $this->first->expects(self::once())->method('rollback')
+            ->willReturnCallback(static function () use (&$order) {
+                $order[] = 'first';
+            });
+
+        $transactional = new ChainTransactional([
+            $this->first,
+            $this->second,
+        ]);
+
+        $transactional->rollback();
+
+        self::assertEquals(['second', 'first'], $order);
     }
 }
