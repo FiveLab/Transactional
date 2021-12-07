@@ -174,17 +174,20 @@ class ChainTransactionalTest extends TestCase
      */
     public function shouldRollbackAllLayersIfOneRollbackFails(): void
     {
-        $this->first
+        $this->second
             ->expects(self::exactly(1))
             ->method('rollback')
             ->willThrowException(new \RuntimeException('some exception'));
 
-        $this->second->expects(self::exactly(1))->method('rollback');
+        $this->first->expects(self::exactly(1))->method('rollback');
 
         $transactional = new ChainTransactional([
             $this->first,
             $this->second,
         ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('some exception');
 
         $transactional->rollback();
     }
