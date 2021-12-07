@@ -90,13 +90,18 @@ class ChainTransactional extends AbstractTransactional
     public function rollback(): void
     {
         $layers = $this->layers;
+        $firstException = null;
 
         while ($transactional = \array_pop($layers)) {
             try {
                 $transactional->rollback();
             } catch (\Throwable $error) {
-                // nothing action, all next layers should rollback also
+                $firstException = $firstException ?: $error;
             }
+        }
+
+        if ($firstException) {
+            throw $firstException;
         }
     }
 }
