@@ -13,22 +13,17 @@ declare(strict_types = 1);
 
 namespace FiveLab\Component\Transactional;
 
-/**
- * Chain transactional
- *
- * @author Vitaliy Zhuk <v.zhuk@fivelab.org>
- */
 class ChainTransactional extends AbstractTransactional
 {
     /**
-     * @var array|TransactionalInterface[]
+     * @var array<TransactionalInterface>
      */
-    private $layers = [];
+    private array $layers = [];
 
     /**
-     * Construct
+     * Constructor.
      *
-     * @param array|TransactionalInterface[] $layers
+     * @param array<TransactionalInterface> $layers
      */
     public function __construct(array $layers = [])
     {
@@ -37,19 +32,11 @@ class ChainTransactional extends AbstractTransactional
         }
     }
 
-    /**
-     * Add transactional layer
-     *
-     * @param TransactionalInterface $transactional
-     */
     public function addTransactional(TransactionalInterface $transactional): void
     {
-        $this->layers[spl_object_hash($transactional)] = $transactional;
+        $this->layers[\spl_object_hash($transactional)] = $transactional;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function begin(): void
     {
         foreach ($this->layers as $transactional) {
@@ -57,9 +44,6 @@ class ChainTransactional extends AbstractTransactional
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function commit(): void
     {
         $layers = $this->layers;
@@ -84,9 +68,6 @@ class ChainTransactional extends AbstractTransactional
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function rollback(): void
     {
         $layers = $this->layers;

@@ -14,24 +14,14 @@ declare(strict_types = 1);
 namespace FiveLab\Component\Transactional\Tests;
 
 use FiveLab\Component\Transactional\AmqpTransactional;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-/**
- * AMQP Transactional tests
- *
- * @author Vitaliy Zhuk <v.zhuk@fivelab.org>
- */
 class AmqpTransactionalTest extends TestCase
 {
-    /**
-     * @var \AMQPChannel|MockObject
-     */
     private \AMQPChannel $channel;
 
-    /**
-     * {@inheritdoc}
-     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -43,9 +33,7 @@ class AmqpTransactionalTest extends TestCase
         $this->channel = $this->createMock(\AMQPChannel::class);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function shouldBeginAndCommitTransaction(): void
     {
         $this->channel->expects(self::once())
@@ -59,9 +47,7 @@ class AmqpTransactionalTest extends TestCase
         $transactional->commit();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function shouldBeginAndRollbackTransaction(): void
     {
         $this->channel->expects(self::once())
@@ -75,9 +61,7 @@ class AmqpTransactionalTest extends TestCase
         $transactional->rollback();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function shouldExceptionOnCommitWithoutActiveTransaction(): void
     {
         $this->expectException(\RuntimeException::class);
@@ -87,9 +71,7 @@ class AmqpTransactionalTest extends TestCase
         $transactional->commit();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function shouldExceptionOnRollbackWithoutActiveTransaction(): void
     {
         $this->expectException(\RuntimeException::class);
@@ -99,9 +81,7 @@ class AmqpTransactionalTest extends TestCase
         $transactional->rollback();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function shouldExecuteSuccessfully(): void
     {
         $this->channel->expects(self::once())
@@ -111,16 +91,12 @@ class AmqpTransactionalTest extends TestCase
             ->method('commitTransaction');
 
         $transactional = new AmqpTransactional($this->channel);
-        $result = $transactional->execute(static function () {
-            return 'some value';
-        });
+        $result = $transactional->execute(static fn() => 'some value');
 
         self::assertEquals('some value', $result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function shouldExecuteSuccessfullyWithHierarchicallyCall(): void
     {
         $this->channel->expects(self::once())
@@ -142,9 +118,7 @@ class AmqpTransactionalTest extends TestCase
         self::assertEquals('foo bar', $result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function shouldExecuteFail(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -158,8 +132,6 @@ class AmqpTransactionalTest extends TestCase
 
         $transactional = new AmqpTransactional($this->channel);
 
-        $transactional->execute(static function () {
-            throw new \InvalidArgumentException('Some exception');
-        });
+        $transactional->execute(static fn() => throw new \InvalidArgumentException('Some exception'));
     }
 }

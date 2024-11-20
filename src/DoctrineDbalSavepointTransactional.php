@@ -15,34 +15,17 @@ namespace FiveLab\Component\Transactional;
 
 use Doctrine\DBAL\Driver\Connection;
 
-/**
- * The transactional layer for use savepoint.
- */
 class DoctrineDbalSavepointTransactional extends AbstractTransactional
 {
     /**
-     * @var Connection
-     */
-    private $connection;
-
-    /**
-     * @var array|string[]
+     * @var array<string>
      */
     private static $keys = [];
 
-    /**
-     * Constructor.
-     *
-     * @param Connection $connection
-     */
-    public function __construct(Connection $connection)
+    public function __construct(private readonly Connection $connection)
     {
-        $this->connection = $connection;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function begin(): void
     {
         $savepointKey = 'savepoint_'.\count(self::$keys);
@@ -52,9 +35,6 @@ class DoctrineDbalSavepointTransactional extends AbstractTransactional
         $this->connection->exec('SAVEPOINT '.$savepointKey);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function commit(): void
     {
         $savepointKey = \array_pop(self::$keys);
@@ -62,9 +42,6 @@ class DoctrineDbalSavepointTransactional extends AbstractTransactional
         $this->connection->exec('RELEASE SAVEPOINT '.$savepointKey);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function rollback(): void
     {
         $savepointKey = \array_pop(self::$keys);

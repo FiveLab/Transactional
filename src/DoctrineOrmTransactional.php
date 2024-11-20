@@ -15,46 +15,23 @@ namespace FiveLab\Component\Transactional;
 
 use Doctrine\ORM\EntityManagerInterface;
 
-/**
- * Doctrine ORM Transactional layer
- *
- * @author Vitaliy Zhuk <v.zhuk@fivelab.org>
- */
 class DoctrineOrmTransactional extends AbstractTransactional
 {
-    /**
-     * @var EntityManagerInterface
-     */
-    private $entityManager;
-
-    /**
-     * @param EntityManagerInterface $entityManager
-     */
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(private readonly EntityManagerInterface $entityManager)
     {
-        $this->entityManager = $entityManager;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function begin(): void
     {
         $this->entityManager->beginTransaction();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function commit(): void
     {
         $this->entityManager->flush();
         $this->entityManager->commit();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function rollback(): void
     {
         $this->entityManager->rollback();

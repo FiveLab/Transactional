@@ -13,16 +13,13 @@ declare(strict_types = 1);
 
 namespace FiveLab\Component\Transactional;
 
-/**
- * Abstract transactional
- *
- * @author Vitaliy Zhuk <v.zhuk@fivelab.org>
- */
-abstract class AbstractTransactional implements TransactionalInterface
+abstract class AbstractTransactional implements TransactionalInterface, ContainErrorsInterface
 {
     /**
-     * {@inheritdoc}
+     * @var array<\Throwable>
      */
+    private array $errors = [];
+
     public function execute(\Closure $callback)
     {
         $this->begin();
@@ -30,6 +27,8 @@ abstract class AbstractTransactional implements TransactionalInterface
         try {
             $result = $callback();
         } catch (\Throwable $e) {
+            $this->errors[] = $e;
+
             $this->rollback();
 
             throw $e;
@@ -38,5 +37,15 @@ abstract class AbstractTransactional implements TransactionalInterface
         $this->commit();
 
         return $result;
+    }
+
+    public function getErrors(): iterable
+    {
+        return $this->errors;
+    }
+
+    public function reset(): void
+    {
+        $this->errors = [];
     }
 }

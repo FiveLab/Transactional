@@ -13,11 +13,6 @@ declare(strict_types = 1);
 
 namespace FiveLab\Component\Transactional;
 
-/**
- * All transactional layers should implement this interface
- *
- * @author Vitaliy Zhuk <v.zhuk@fivelab.org>
- */
 interface TransactionalInterface
 {
     /**

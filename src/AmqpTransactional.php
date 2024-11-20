@@ -13,36 +13,14 @@ declare(strict_types = 1);
 
 namespace FiveLab\Component\Transactional;
 
-/**
- * AMQP Transactional
- *
- * @author Vitaliy Zhuk <v.zhuk@fivelab.org>
- */
 class AmqpTransactional extends AbstractTransactional
 {
-    /**
-     * @var \AMQPChannel
-     */
-    private $channel;
+    private int $nestingLevel = 0;
 
-    /**
-     * @var int
-     */
-    private $nestingLevel = 0;
-
-    /**
-     * Construct
-     *
-     * @param \AMQPChannel $channel
-     */
-    public function __construct(\AMQPChannel $channel)
+    public function __construct(private readonly \AMQPChannel $channel)
     {
-        $this->channel = $channel;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function begin(): void
     {
         if (0 === $this->nestingLevel) {
@@ -52,9 +30,6 @@ class AmqpTransactional extends AbstractTransactional
         $this->nestingLevel++;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function commit(): void
     {
         if (0 === $this->nestingLevel) {
@@ -68,9 +43,6 @@ class AmqpTransactional extends AbstractTransactional
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function rollback(): void
     {
         if (0 === $this->nestingLevel) {

@@ -15,38 +15,22 @@ namespace FiveLab\Component\Transactional\Tests;
 
 use FiveLab\Component\Transactional\ChainTransactional;
 use FiveLab\Component\Transactional\TransactionalInterface;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Chain transactional testing
- *
- * @author Vitaliy Zhuk <v.zhuk@fivelab.org>
- */
 class ChainTransactionalTest extends TestCase
 {
-    /**
-     * @var TransactionalInterface|MockObject
-     */
     private TransactionalInterface $first;
-
-    /**
-     * @var TransactionalInterface|MockObject
-     */
     private TransactionalInterface $second;
 
-    /**
-     * {@inheritdoc}
-     */
     protected function setUp(): void
     {
         $this->first = $this->createMock(TransactionalInterface::class);
         $this->second = $this->createMock(TransactionalInterface::class);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function shouldBeginTransaction(): void
     {
         $this->first->expects(self::once())->method('begin');
@@ -61,9 +45,7 @@ class ChainTransactionalTest extends TestCase
         $transactional->begin();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function shouldCommitTransaction(): void
     {
         $this->first->expects(self::once())->method('commit');
@@ -78,9 +60,7 @@ class ChainTransactionalTest extends TestCase
         $transactional->commit();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function shouldRollbackTransaction(): void
     {
         $this->first->expects(self::once())->method('rollback');
@@ -95,9 +75,7 @@ class ChainTransactionalTest extends TestCase
         $transactional->rollback();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function shouldExecuteSuccessfully(): void
     {
         $this->first->expects(self::once())->method('begin');
@@ -118,9 +96,7 @@ class ChainTransactionalTest extends TestCase
         self::assertEquals('some value', $result);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function shouldExecuteFail(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -142,9 +118,7 @@ class ChainTransactionalTest extends TestCase
         });
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function shouldRollBackAllLayersIfCommitFails(): void
     {
         $this->second
@@ -169,9 +143,7 @@ class ChainTransactionalTest extends TestCase
         $transactional->commit();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function shouldRollbackAllLayersIfOneRollbackFails(): void
     {
         $this->second
@@ -192,9 +164,7 @@ class ChainTransactionalTest extends TestCase
         $transactional->rollback();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function shouldCommitInCorrectOrder(): void
     {
         $order = [];
@@ -219,9 +189,7 @@ class ChainTransactionalTest extends TestCase
         self::assertEquals(['second', 'first'], $order);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function shouldRollbackInCorrectOrder(): void
     {
         $order = [];
@@ -244,5 +212,32 @@ class ChainTransactionalTest extends TestCase
         $transactional->rollback();
 
         self::assertEquals(['second', 'first'], $order);
+    }
+
+    #[Test]
+    public function shouldCorrectGetErrorsAndClear(): void
+    {
+        $error = new \TypeError('some exception');
+        $callback = static fn () => throw $error;
+
+        $this->first->expects(self::once())->method('begin');
+        $this->first->expects(self::once())->method('rollback');
+
+        $transactional = new ChainTransactional([$this->first]);
+
+        try {
+            $transactional->execute($callback);
+
+            self::fail('should throw error');
+        } catch (\TypeError) {
+            // Normal flow.
+            $this->addToAssertionCount(1);
+        }
+
+        self::assertEquals([$error], $transactional->getErrors());
+
+        $transactional->reset();
+
+        self::assertEquals([], $transactional->getErrors());
     }
 }

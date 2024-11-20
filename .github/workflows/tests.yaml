@@ -19,17 +19,17 @@ jobs:
                     coverage: "none"
                     extensions: "amqp"
                     ini-values: "memory_limit=-1"
-                    php-version: "7.4"
+                    php-version: "8.2"
                     tools: "composer"
 
             -   name: Install vendors
                 run: composer install --prefer-dist
 
             -   name: Check style on sources
-                run: bin/phpcs --standard=vendor/escapestudios/symfony2-coding-standard/Symfony/ src/
+                run: bin/phpcs --standard=phpcs.xml src/
 
             -   name: Check style on tests
-                run: bin/phpcs --standard=vendor/escapestudios/symfony2-coding-standard/Symfony/ tests/
+                run: bin/phpcs --standard=phpcs.xml tests/
 
     php-stan:
         name: Run PHP-Stan
@@ -45,7 +45,7 @@ jobs:
                     coverage: "none"
                     extensions: "amqp"
                     ini-values: "memory_limit=-1"
-                    php-version: "7.4"
+                    php-version: "8.2"
                     tools: "composer"
 
             -   name: Install vendors
@@ -60,7 +60,7 @@ jobs:
 
         strategy:
             matrix:
-                php: [ '7.4', '8.0' ]
+                php: [ '8.2', '8.3' ]
 
         steps:
             -   name: Checkout
