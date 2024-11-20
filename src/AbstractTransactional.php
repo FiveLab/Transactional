@@ -13,12 +13,9 @@ declare(strict_types = 1);
 
 namespace FiveLab\Component\Transactional;
 
-abstract class AbstractTransactional implements TransactionalInterface, ContainErrorsInterface
+abstract class AbstractTransactional implements TransactionalInterface, ContainErrorHandlerInterface
 {
-    /**
-     * @var array<\Throwable>
-     */
-    private array $errors = [];
+    private ?\Closure $errorHandler = null;
 
     public function execute(\Closure $callback)
     {
@@ -27,7 +24,9 @@ abstract class AbstractTransactional implements TransactionalInterface, ContainE
         try {
             $result = $callback();
         } catch (\Throwable $e) {
-            $this->errors[] = $e;
+            if ($this->errorHandler) {
+                ($this->errorHandler)($e, $this);
+            }
 
             $this->rollback();
 
@@ -39,13 +38,8 @@ abstract class AbstractTransactional implements TransactionalInterface, ContainE
         return $result;
     }
 
-    public function getErrors(): iterable
+    public function setErrorHandler(?\Closure $handler): void
     {
-        return $this->errors;
-    }
-
-    public function reset(): void
-    {
-        $this->errors = [];
+        $this->errorHandler = $handler;
     }
 }

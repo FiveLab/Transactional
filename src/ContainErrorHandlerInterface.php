@@ -13,17 +13,7 @@ declare(strict_types = 1);
 
 namespace FiveLab\Component\Transactional;
 
-interface ContainErrorsInterface
+interface ContainErrorHandlerInterface
 {
-    /**
-     * Get threw errors
-     *
-     * @return iterable<\Throwable>
-     */
-    public function getErrors(): iterable;
-
-    /**
-     * Reset threw errors
-     */
-    public function reset(): void;
+    public function setErrorHandler(?\Closure $handler): void;
 }

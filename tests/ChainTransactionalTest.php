@@ -215,7 +215,7 @@ class ChainTransactionalTest extends TestCase
     }
 
     #[Test]
-    public function shouldCorrectGetErrorsAndClear(): void
+    public function shouldCorrectHandleError(): void
     {
         $error = new \TypeError('some exception');
         $callback = static fn () => throw $error;
@@ -225,19 +225,21 @@ class ChainTransactionalTest extends TestCase
 
         $transactional = new ChainTransactional([$this->first]);
 
+        $handledError = false;
+
+        $transactional->setErrorHandler(static function () use (&$handledError) {
+            $handledError = true;
+        });
+
         try {
             $transactional->execute($callback);
 
             self::fail('should throw error');
-        } catch (\TypeError) {
-            // Normal flow.
+        } catch (\TypeError $catchedError) {
+            self::assertEquals($error, $catchedError);
             $this->addToAssertionCount(1);
         }
 
-        self::assertEquals([$error], $transactional->getErrors());
-
-        $transactional->reset();
-
-        self::assertEquals([], $transactional->getErrors());
+        self::assertTrue($handledError, 'Error not handled in transactional');
     }
 }
