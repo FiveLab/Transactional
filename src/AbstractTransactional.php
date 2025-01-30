@@ -24,11 +24,11 @@ abstract class AbstractTransactional implements TransactionalInterface, ContainE
         try {
             $result = $callback();
         } catch (\Throwable $e) {
+            $this->rollback();
+
             if ($this->errorHandler) {
                 ($this->errorHandler)($e, $this);
             }
-
-            $this->rollback();
 
             throw $e;
         }
